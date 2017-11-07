@@ -1,6 +1,5 @@
 ---
 title: Home
 ---
-### Notes
-- Hello
-- Binoy
+### Book Notes
+- [High Performance Browser Networking](hpbn.md)
