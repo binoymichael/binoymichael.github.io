@@ -1,8 +1,5 @@
 ---
 title: Home
 ---
-### TIL
--   
-
 ### Book Notes
-- [High Performance Browser Networking](hpbn.md)
+- [High Performance Browser Networking](public/hpbn.md)
