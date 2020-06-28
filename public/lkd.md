@@ -1,0 +1,44 @@
+### Process management
+  - Process
+    - process descriptor
+      - thread_info
+        - task_struct
+          - pid
+          - state
+      - max limit of processes
+      - current_thread_info()->task;
+      - process states
+        - task_running
+        - task_interruptible
+        - task_uninterruptible
+        - task_tracked
+        - task_stopped
+      - processor context
+      - process tree
+        - parent
+        - children
+    - process creation
+      - fork()
+        - create child process as copy with different pid
+        - ppid is pid of original process
+      - exec()
+        - execute new executable
+      - copy on write 
+        - fork() only has to duplicate parent's page tables
+      - fork() internals
+        - dup_task_struct()
+        - task_uninterruptible (not runnable yet)
+        - alloc_pid()
+        - copy_process()
+      - vfork()
+        - = fork(), except parent page table entries are not copied
+        - why do we need vfork() ???
+    - Threads
+      - multiple threads of execution of the same program in a shared memory address space
+      - can share open files and other resources
+      - enables concurrency and parallelism (in multi-core systems)
+      - linux implemntation
+        - no concept of thread. thread = standard process
+        - thread is a merely process that shares certain resources with other processes
+      - creation
+        - 
