@@ -168,3 +168,29 @@ Scheduling Implemtation
   - when are real time processes used ???
 
 ### System Calls 
+- mechanism for user space processes to interact with the system
+- interface b/w user space & hardware
+  - abstracted h/w interface
+  - system security and stability
+  - provide a virtualized system to processes
+- user space calls API (POSIX), which then makes the system call
+- syscalls have a number; user space process invokes syscall by this number
+- System call handler
+  - how to invoke a syscall?
+    - cannot directly make a function call ; systcall needs to be executed in kernel space 
+    - instead invoked via a software interuppt
+      - write syscall number into eax register
+      - write parameters to other registers
+      - cause an exception
+      - system switches to kernel mode
+      - and executes exception handler
+- System call implementation
+  - must verify the parameters passed
+  - kernel code must never follow a pointer into user space
+    - copy_to_user()
+    - copy_from_user()
+  - must check user process capabilities 
+- System call context
+  - accessing system call from user-space
+
+### Kernel Data Structures
