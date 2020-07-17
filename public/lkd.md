@@ -194,3 +194,135 @@ Scheduling Implemtation
   - accessing system call from user-space
 
 ### Kernel Data Structures
+- Linked Lists
+  - single
+  - double
+  - ciccular
+  - special kind of implementation in whic a data node has a list_head as a member
+- Queues
+  - useful for producer/consumer logic
+- Maps (associative arrays)
+  - add, remove, lookup
+  - allocate; generates UID as well
+- Binary Trees
+  - BST
+  - Self balancing BST
+  - Red black tree
+
+### Interrupts and Interrupt Handlers
+- Motivation
+  - managing h/w is one of core os duties
+  - kernel faster than h/w; so can't wait for h/w
+    - polling is a way; but incurs overhead
+    - better soln is for h/w to signal kernel it needs attention; interuppt
+- Interrupt
+  - "the key-board controller (the hardware device that manages the keyboard) issues an electrical sig- nal to the processor to alert the operating system to newly available key presses.These electrical signals are interrupts.The processor receives the interrupt and signals the oper- ating system to enable the operating system to respond to the new data. Hardware devices generate interrupts asynchronously with respect to the processor clock—they can occur at any time. Consequently, the kernel can be interrupted at any time to process interrupts."
+  - h/w - signal -> interrupt controller input pin -> processor signal -> notifies os
+  - different devices; different interrupts - unique value
+  - IRQ (interrupt request lines)
+    - 0 = timer
+    - 1 = keyboard
+    - interrupt values could be dynamically assigned as well
+- Exceptions
+  - not same as interrupts, but similar
+  - synchronized with processor clock
+  - kernel code for handling exceptions is similar to handling h/w interrupts
+  - system calls are implemented via software interrupts 
+- Interrupt Handler
+  - fn that kernel runs in response to specific interrupt is called an interrupt handler
+  - each device generates different interrupts
+  - interrupt handler is in the device driver - kernel code that manages the device
+  - interrupts are handled in a special context called interrupt context
+  - interrupts are to be responded to quickly and then handler should execute the fn quickly
+- Top halves vs Bottom halves
+  - conflicting needs - execute quickly vs large amount of work to be done (e.g. handling n/w traffic, copying bytes from n/w card)
+  - interrupt processing is split into 2 halves
+    - top half ack recipet
+    - heavy work is deferred to bottom half
+    - n/w example; on interrupt kernel copies packets from n/w card into main memory and acks; actual processing of the n/w packets happen later
+- Registering an interrupt handler
+  - responsibility of the device drive to register the device's interrupt handler
+  - request_irq(irq, handler, flags, ...)
+  - flags
+    - IRQF_DISABLED - disable all interrupts when exexecuting this handler. usually only used for performance sensitive inter
+    - IRQF_SAMPLE_RANDOM - contribute to entropy pool - to generate truly random numbers
+    - IRQF_TIMER - processes interrupts for system timer
+    - IRQF_SHARED - interrupt line can be shared by multiple interrupt handlers
+  - free_irq() - unregister the interrupt handler 
+- Writing an interrupt handler
+  - fn to handle the interrupt
+  - interrupt need not be reentrant. when an interrupt handler is executed, corresponding interrupt line is masked on all processors; interrupt handler never invoked concurrently
+  - all other interrupts are enabled, but current line is always disabled; 
+  - example : real life interrupt handler
+- Interrupt Context
+- Implementing interrupt handlers
+  - interrupt path from hardware to kernel
+- /proc/interrupts
+- Interrupt Control 
+  - linux provides interfaces for manipulating state of interrupts on a machine
+    - linux provides interfaces for manipulating state of interrupts on a machine
+    - can disable interrupts / mask out an interrupt line
+
+### Bottom Halves and Deferring Work
+- Bottom halves
+  - perform any interrupt related work not performed by interrupt handler in top half
+  - critieria to decide where to run - top vs bottom
+    - top half
+      - time sensitive
+      - h/w related
+      - needs to ensure another interrupt does not interrupt it ???
+    - everything else can be bottom half
+    - no hard rules though
+- why use bottom halves
+  - interrupt handler disables current interrupt line on the processor
+  - handlers with IRQF_DISABLED disables all interrupt lines on current processor and current interrupt line on all processors
+  - e.g "processing incoming n/w traffic should not prevent kernel's receipt of key-strokes"
+- how are bottom halves implemented  
+  - original 
+    - globally synchronized 32 bit interger  for 32 possible tasks?
+  - task queues
+  - softirqs and tasklets (currently available)
+  - work queues (currently available)
+...
+
+### Kernel Synchronization
+- Critical regions and race conditions
+  - context
+    - code paths that access and manipulate shared data = critical region
+    - critical region must execute "atomically"
+    - if 2 threads execute the critical region simulataneously, possible race condition
+    - preventing this = synchronization
+    - classic bank balance example
+  - single variable
+    - i++; multiple machine instructions problem
+    - processor supply an atomic increment and store instruction to prevent this
+- Locking
+  - processors cannot provide atomic instructions for all complex mechanisms
+  - "a mechanism for preventing access to a resource while another thread of execution is in the marked region" - locking
+  - threads hold locks; locks protect data
+  - locks prevent concurrency and thus prevent race conditions
+  - locks are advisory and voluntary
+  - getting a lock is atomic - test and set instruction
+  - causes of concurrency
+    - pseudo concurrency because of interleaving processes scheduled by the kernel vs true concurrency in a symmetrical mulitprocessing machine
+    - interrupt-safe
+    - SMP-safe
+    - prempt-safe
+  - knowing what to protect
+    - stack data is safe
+    - "if anyone else can see it, lock it"
+- Deadlocks
+  - difficult to prove code is free of deadlocks, but it is possible to write deadlock free code
+  - guidelines
+    - lock ordering. nested locks must always be obtained in the same order
+      - e.g. 3 locks cat, dog, fox guarding data strcutures with the same names
+      - if you want to acquire locks on all the 3 data strcutures, all functions should do that in the same order
+    - prevent starvation. "if foo does not occur, will bar wait forever?"
+    - don't double acquire same lock
+    - design for simplicity
+- contention and scalability
+  - lock contention - a lock is use, but for which another thread is waiting
+  - locks serailize access to a resource; thus results in slow down of performance
+  - scalability = how well can a system be expanded
+  - coarse locks vs fine locks
+  - "There is a thin line between too-coarse locking and too-fine locking.  Locking that is too coarse results in poor scalability if there is high lock contention, whereas locking that is too fine results in wasteful overhead if there is little lock contention"
